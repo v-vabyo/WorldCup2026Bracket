@@ -871,8 +871,17 @@
         const url = '/api/matches?t=' + window30s;
         const response = await fetch(url);
         const data = await response.json();
-        if (!data.matches) return;
-        const knockout = data.matches; // Removed GROUP_STAGE filter to catch all mock matches
+        
+        if (!response.ok || data.error) {
+            throw new Error(data.error || "Server response not OK");
+        }
+        
+        if (!data.matches) {
+            console.warn("No matches array in API response:", data);
+            return;
+        }
+        
+        const knockout = data.matches;
         
         let changed = false;
         const activeMatches = getAllActiveMatches();
