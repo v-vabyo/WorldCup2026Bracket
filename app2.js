@@ -18,6 +18,7 @@
     }
   };
 
+  let currentGraph = null;
   let arenaEl, modalOverlay, toastEl;
   let livePanel, liveFlag1, liveName1, liveScore1, liveFlag2, liveName2, liveScore2, liveMatchStatus, livePanelTitle;
 
@@ -326,14 +327,14 @@
 
     const radii = [
       size * 0.46, // R32 (0)
-      size * 0.37, // R16 (1)
-      size * 0.28, // QF  (2)
-      size * 0.19, // SF  (3)
-      size * 0.10, // F   (4)
-      0            // Champ (5)
+      size * 0.38, // R16 (1)
+      size * 0.30, // QF  (2)
+      size * 0.22, // SF  (3)
+      size * 0.13, // F   (4)
     ];
 
-    const graph = buildNodesAndEdges();
+    currentGraph = buildNodesAndEdges();
+    const graph = currentGraph;
     const svg = drawEdges(graph.edges, size, cx, cy, radii);
     arenaEl.appendChild(svg);
 
@@ -951,61 +952,50 @@
     }
 
     async function runSimulation() {
-      // Round of 32
-      for (const match of MATCHES_R32) {
-        if (match.status === 'finished') continue; // Don't override real finished matches
-        if (!state.picks.r32[match.id]) {
-          state.picks.r32[match.id] = calculateWinner(match.team1, match.team2);
-        }
-      }
-      buildBracket();
-      await new Promise(r => setTimeout(r, 600)); // Delay
-      
-      // Round of 16
-      for (const match of R16_BRACKET) {
-        const f1Winner = state.picks.r32[match.feedFrom[0]] || MATCHES_R32.find(x => x.id === match.feedFrom[0])?.winner;
-        const f2Winner = state.picks.r32[match.feedFrom[1]] || MATCHES_R32.find(x => x.id === match.feedFrom[1])?.winner;
-        
-        if (!state.picks.r16[match.id] && f1Winner && f2Winner) {
-          state.picks.r16[match.id] = calculateWinner(f1Winner, f2Winner);
-        }
-      }
-      buildBracket();
-      await new Promise(r => setTimeout(r, 600)); // Delay
+      const simulateRound = async (matches, currentRing, stateObj, feedFromFunc) => {
+        for (const match of matches) {
+          if (currentRing === 0 && match.status === 'finished') continue; // Skip real finished matches
+          if (stateObj[match.id]) continue; // Already picked
 
-      // Quarter Final
-      for (const match of QF_BRACKET) {
-        const f1Winner = state.picks.r16[match.feedFrom[0]];
-        const f2Winner = state.picks.r16[match.feedFrom[1]];
-        if (!state.picks.qf[match.id] && f1Winner && f2Winner) {
-          state.picks.qf[match.id] = calculateWinner(f1Winner, f2Winner);
-        }
-      }
-      buildBracket();
-      await new Promise(r => setTimeout(r, 600)); // Delay
+          let team1, team2;
+          if (currentRing === 0) {
+             team1 = match.team1;
+             team2 = match.team2;
+          } else {
+             team1 = feedFromFunc(match.feedFrom[0]);
+             team2 = feedFromFunc(match.feedFrom[1]);
+          }
 
-      // Semi Final
-      for (const match of SF_BRACKET) {
-        const f1Winner = state.picks.qf[match.feedFrom[0]];
-        const f2Winner = state.picks.qf[match.feedFrom[1]];
-        if (!state.picks.sf[match.id] && f1Winner && f2Winner) {
-          state.picks.sf[match.id] = calculateWinner(f1Winner, f2Winner);
+          if (!team1 || !team2) continue; // Waiting for previous rounds
+
+          const winner = calculateWinner(team1, team2);
+
+          // Find the node in the UI and click it programmatically
+          const sourceNode = currentGraph.nodes.find(n => n.ring === currentRing && n.team === winner);
+          if (!sourceNode) continue;
+
+          advanceTeam(sourceNode);
+          
+          // Wait for the CSS flying animation (400ms) + small buffer to finish
+          await new Promise(r => setTimeout(r, 600));
         }
-      }
-      buildBracket();
-      await new Promise(r => setTimeout(r, 800)); // Longer Delay for Final
+      };
+
+      const getR32Winner = (id) => state.picks.r32[id] || MATCHES_R32.find(m => m.id === id)?.winner;
+      const getR16Winner = (id) => state.picks.r16[id];
+      const getQFWinner = (id) => state.picks.qf[id];
+      const getSFWinner = (id) => state.picks.sf[id];
+
+      await simulateRound(MATCHES_R32, 0, state.picks.r32, null);
+      await simulateRound(R16_BRACKET, 1, state.picks.r16, getR32Winner);
+      await simulateRound(QF_BRACKET, 2, state.picks.qf, getR16Winner);
+      await simulateRound(SF_BRACKET, 3, state.picks.sf, getQFWinner);
       
-      // Final
-      for (const match of F_BRACKET) {
-        const f1Winner = state.picks.sf[match.feedFrom[0]];
-        const f2Winner = state.picks.sf[match.feedFrom[1]];
-        if (!state.picks.f[match.id] && f1Winner && f2Winner) {
-          state.picks.f[match.id] = calculateWinner(f1Winner, f2Winner);
-        }
-      }
-      buildBracket();
-      
-      showToast("Simulasi berbobot selesai!");
+      // For Final, wait a bit longer to enjoy the confetti
+      await simulateRound(F_BRACKET, 4, state.picks.f, getSFWinner);
+      await new Promise(r => setTimeout(r, 800));
+
+      showToast("Simulasi selesai!");
     }
 
     document.getElementById("btn-simulate")?.addEventListener("click", () => {
