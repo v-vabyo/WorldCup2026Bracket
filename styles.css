@@ -134,6 +134,10 @@ body {
   text-decoration: underline;
 }
 
+.mobile-footer {
+  display: none;
+}
+
 /* ---------- Arena ---------- */
 .arena-wrap {
   flex: 1;
@@ -556,15 +560,18 @@ body {
     z-index: 200;
   }
   
-  .sidebar__desc {
+  .sidebar__desc, .sidebar__footer {
     display: none;
   }
   
-  .sidebar__footer {
+  .mobile-footer {
     display: block;
     width: 100%;
     text-align: center;
-    margin-top: 15px;
+    padding: 0 20px 20px 20px;
+    font-size: 11px;
+    color: var(--text-muted);
+    order: 4;
   }
   
   .sidebar__header {
