@@ -2,8 +2,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  // Cache for 10 seconds on CDN, serve stale up to 1 hour while updating in background
-  res.setHeader('Cache-Control', 's-maxage=10, stale-while-revalidate=3600');
+  // Completely disable caching to guarantee instant Live Score updates
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
