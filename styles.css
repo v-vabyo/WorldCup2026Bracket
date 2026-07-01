@@ -118,8 +118,20 @@ body {
 }
 
 .sidebar__footer {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
+}
+
+.footer-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #fff;
+  text-decoration: underline;
 }
 
 /* ---------- Arena ---------- */
@@ -544,8 +556,15 @@ body {
     z-index: 200;
   }
   
-  .sidebar__desc, .sidebar__footer {
+  .sidebar__desc {
     display: none;
+  }
+  
+  .sidebar__footer {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: 15px;
   }
   
   .sidebar__header {
