@@ -836,44 +836,72 @@
   }
 
   function fetchLiveScores() {
+    const getAllActiveMatches = () => {
+       const active = [];
+       MATCHES_R32.forEach(m => active.push({ id: m.id, team1: m.team1, team2: m.team2, orig: m, roundObj: state.picks.r32 }));
+       R16_BRACKET.forEach(m => {
+          const t1 = state.picks.r32[m.feedFrom[0]] || MATCHES_R32.find(x => x.id === m.feedFrom[0])?.winner;
+          const t2 = state.picks.r32[m.feedFrom[1]] || MATCHES_R32.find(x => x.id === m.feedFrom[1])?.winner;
+          if (t1 && t2) active.push({ id: m.id, team1: t1, team2: t2, orig: m, roundObj: state.picks.r16 });
+       });
+       QF_BRACKET.forEach(m => {
+          const t1 = state.picks.r16[m.feedFrom[0]];
+          const t2 = state.picks.r16[m.feedFrom[1]];
+          if (t1 && t2) active.push({ id: m.id, team1: t1, team2: t2, orig: m, roundObj: state.picks.qf });
+       });
+       SF_BRACKET.forEach(m => {
+          const t1 = state.picks.qf[m.feedFrom[0]];
+          const t2 = state.picks.qf[m.feedFrom[1]];
+          if (t1 && t2) active.push({ id: m.id, team1: t1, team2: t2, orig: m, roundObj: state.picks.sf });
+       });
+       F_BRACKET.forEach(m => {
+          const t1 = state.picks.sf[m.feedFrom[0]];
+          const t2 = state.picks.sf[m.feedFrom[1]];
+          if (t1 && t2) active.push({ id: m.id, team1: t1, team2: t2, orig: m, roundObj: state.picks.f });
+       });
+       return active;
+    };
+
     const fetchAPI = async () => {
       try {
-        const url = '/api/matches?t=' + Date.now();
-        const response = await fetch(url, { cache: 'no-store' });
+        const window30s = Math.floor(Date.now() / 30000);
+        const url = '/api/matches?t=' + window30s;
+        const response = await fetch(url);
         const data = await response.json();
         if (!data.matches) return;
         const knockout = data.matches.filter(m => m.stage !== 'GROUP_STAGE');
         
         let changed = false;
+        const activeMatches = getAllActiveMatches();
+        
         knockout.forEach(apiMatch => {
           if (!apiMatch.homeTeam.tla || !apiMatch.awayTeam.tla) return;
           const apiHome = apiMatch.homeTeam.tla;
           const apiAway = apiMatch.awayTeam.tla;
           
-          const match = MATCHES_R32.find(m => {
-             const t1 = mapToApiTLA(m.team1);
-             const t2 = mapToApiTLA(m.team2);
+          const matchData = activeMatches.find(am => {
+             const t1 = mapToApiTLA(am.team1);
+             const t2 = mapToApiTLA(am.team2);
              return (t1 === apiHome && t2 === apiAway) || (t1 === apiAway && t2 === apiHome);
           });
           
-          if (match) {
-             const t1 = mapToApiTLA(match.team1);
-             const isHomeT1 = t1 === apiHome;
+          if (matchData) {
+             const m = matchData.orig;
+             const isHomeT1 = mapToApiTLA(matchData.team1) === apiHome;
              
              let newStatus = "upcoming";
              if (apiMatch.status === "IN_PLAY" || apiMatch.status === "PAUSED") newStatus = "live";
              if (apiMatch.status === "FINISHED") newStatus = "finished";
              
-             // Prevent mock API from downgrading finished matches to upcoming when it resets them to TIMED
-             if (newStatus === "upcoming" && match.status === "finished") {
+             if (newStatus === "upcoming" && m.status === "finished") {
                  newStatus = "finished";
              }
              
              const isStarted = newStatus !== "upcoming";
+             let s1 = m.score1;
+             let s2 = m.score2;
              
-             let s1 = match.score1;
-             let s2 = match.score2;
-             if (isStarted && apiMatch.score && apiMatch.score.fullTime) {
+             if (isStarted && apiMatch.score && apiMatch.score.fullTime && apiMatch.score.fullTime.home !== null) {
                  s1 = isHomeT1 ? apiMatch.score.fullTime.home : apiMatch.score.fullTime.away;
                  s2 = isHomeT1 ? apiMatch.score.fullTime.away : apiMatch.score.fullTime.home;
                  
@@ -889,8 +917,8 @@
              let p1 = null;
              let p2 = null;
              if (newStatus === "finished" && apiMatch.score) {
-                 if (apiMatch.score.winner === "HOME_TEAM") winner = isHomeT1 ? match.team1 : match.team2;
-                 if (apiMatch.score.winner === "AWAY_TEAM") winner = isHomeT1 ? match.team2 : match.team1;
+                 if (apiMatch.score.winner === "HOME_TEAM") winner = isHomeT1 ? matchData.team1 : matchData.team2;
+                 if (apiMatch.score.winner === "AWAY_TEAM") winner = isHomeT1 ? matchData.team2 : matchData.team1;
                  
                  if (apiMatch.score.duration === "PENALTY_SHOOTOUT" && apiMatch.score.penalties) {
                     p1 = isHomeT1 ? apiMatch.score.penalties.home : apiMatch.score.penalties.away;
@@ -898,13 +926,22 @@
                  }
              }
              
-             if (match.status !== newStatus || match.score1 !== s1 || match.score2 !== s2 || match.penaltyScore1 !== p1 || match.penaltyScore2 !== p2 || match.winner !== winner) {
-                match.status = newStatus;
-                match.score1 = s1;
-                match.score2 = s2;
-                match.penaltyScore1 = p1;
-                match.penaltyScore2 = p2;
-                match.winner = winner;
+             if (s1 !== undefined && s1 !== null) {
+                 state.simScores[m.id] = { t1Score: s1, t2Score: s2, pen1: p1, pen2: p2 };
+             }
+
+             if (m.status !== newStatus || m.score1 !== s1 || m.score2 !== s2 || m.penaltyScore1 !== p1 || m.penaltyScore2 !== p2 || m.winner !== winner) {
+                m.status = newStatus;
+                m.score1 = s1;
+                m.score2 = s2;
+                m.penaltyScore1 = p1;
+                m.penaltyScore2 = p2;
+                m.winner = winner;
+                
+                if (newStatus === "finished" && winner) {
+                   matchData.roundObj[m.id] = winner;
+                }
+                
                 changed = true;
              }
           }
@@ -918,7 +955,6 @@
         }
       } catch (err) {
         console.warn("API Fetch Error:", err);
-        // showToast("Error: API gagal diakses. Pastikan Anda membukanya via http://localhost (Live Server), bukan file:///");
       }
     };
     
