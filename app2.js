@@ -797,11 +797,10 @@
   function fetchLiveScores() {
     const fetchAPI = async () => {
       try {
-        const url = 'http://localhost:3000/api/matches?t=' + Date.now();
+        const url = '/api/matches?t=' + Date.now();
         const response = await fetch(url, { cache: 'no-store' });
         const data = await response.json();
         if (!data.matches) return;
-        
         const knockout = data.matches.filter(m => m.stage !== 'GROUP_STAGE');
         
         let changed = false;
