@@ -931,6 +931,86 @@
       buildBracket();
       showToast("Bracket reset!");
     });
+    
+    // ================================================================
+    // AUTO SIMULATION
+    // ================================================================
+    function calculateWinner(teamA, teamB) {
+      if (!teamA || !teamB) return null;
+      const ratingA = TEAMS[teamA]?.rating || 75;
+      const ratingB = TEAMS[teamB]?.rating || 75;
+      
+      // Base probability 50% + difference in rating * 1.5%
+      let probA = 0.5 + ((ratingA - ratingB) * 0.015);
+      
+      // Cap probabilities to ensure upsets are always possible (min 15%, max 85%)
+      probA = Math.max(0.15, Math.min(0.85, probA));
+      
+      const random = Math.random();
+      return random <= probA ? teamA : teamB;
+    }
+
+    async function runSimulation() {
+      // Round of 32
+      for (const match of MATCHES_R32) {
+        if (match.status === 'finished') continue; // Don't override real finished matches
+        if (!state.picks.r32[match.id]) {
+          state.picks.r32[match.id] = calculateWinner(match.team1, match.team2);
+        }
+      }
+      buildBracket();
+      await new Promise(r => setTimeout(r, 600)); // Delay
+      
+      // Round of 16
+      for (const match of R16_BRACKET) {
+        const f1Winner = state.picks.r32[match.feedFrom[0]] || MATCHES_R32.find(x => x.id === match.feedFrom[0])?.winner;
+        const f2Winner = state.picks.r32[match.feedFrom[1]] || MATCHES_R32.find(x => x.id === match.feedFrom[1])?.winner;
+        
+        if (!state.picks.r16[match.id] && f1Winner && f2Winner) {
+          state.picks.r16[match.id] = calculateWinner(f1Winner, f2Winner);
+        }
+      }
+      buildBracket();
+      await new Promise(r => setTimeout(r, 600)); // Delay
+
+      // Quarter Final
+      for (const match of QF_BRACKET) {
+        const f1Winner = state.picks.r16[match.feedFrom[0]];
+        const f2Winner = state.picks.r16[match.feedFrom[1]];
+        if (!state.picks.qf[match.id] && f1Winner && f2Winner) {
+          state.picks.qf[match.id] = calculateWinner(f1Winner, f2Winner);
+        }
+      }
+      buildBracket();
+      await new Promise(r => setTimeout(r, 600)); // Delay
+
+      // Semi Final
+      for (const match of SF_BRACKET) {
+        const f1Winner = state.picks.qf[match.feedFrom[0]];
+        const f2Winner = state.picks.qf[match.feedFrom[1]];
+        if (!state.picks.sf[match.id] && f1Winner && f2Winner) {
+          state.picks.sf[match.id] = calculateWinner(f1Winner, f2Winner);
+        }
+      }
+      buildBracket();
+      await new Promise(r => setTimeout(r, 800)); // Longer Delay for Final
+      
+      // Final
+      for (const match of F_BRACKET) {
+        const f1Winner = state.picks.sf[match.feedFrom[0]];
+        const f2Winner = state.picks.sf[match.feedFrom[1]];
+        if (!state.picks.f[match.id] && f1Winner && f2Winner) {
+          state.picks.f[match.id] = calculateWinner(f1Winner, f2Winner);
+        }
+      }
+      buildBracket();
+      
+      showToast("Simulasi berbobot selesai!");
+    }
+
+    document.getElementById("btn-simulate")?.addEventListener("click", () => {
+      runSimulation();
+    });
 
     let resizeTimer;
     window.addEventListener("resize", () => {
