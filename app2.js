@@ -650,21 +650,27 @@
                const midR = (radii[toData.ring] + radii[fromData.ring]) / 2;
                const jxLocal = posOnCircle(cx, cy, midR, targetAngle);
                
-               keyframes = [
+               const kf1 = [
                  { left: fromX + "px", top: fromY + "px", width: fromData.el.clientWidth + "px", height: fromData.el.clientHeight + "px" },
+                 { left: jxLocal.x + "px", top: jxLocal.y + "px", width: midSize + "px", height: midSize + "px" }
+               ];
+               const anim1 = fly.animate(kf1, { duration: 150, easing: 'linear', fill: 'forwards' });
+               await anim1.finished;
+               
+               const kf2 = [
                  { left: jxLocal.x + "px", top: jxLocal.y + "px", width: midSize + "px", height: midSize + "px" },
                  { left: toX + "px", top: toY + "px", width: toData.el.clientWidth + "px", height: toData.el.clientHeight + "px" }
                ];
-               duration = 300;
+               const anim2 = fly.animate(kf2, { duration: 150, easing: 'linear', fill: 'forwards' });
+               await anim2.finished;
             } else {
-               keyframes = [
+               const kf = [
                  { left: fromX + "px", top: fromY + "px", width: fromData.el.clientWidth + "px", height: fromData.el.clientHeight + "px" },
                  { left: toX + "px", top: toY + "px", width: toData.el.clientWidth + "px", height: toData.el.clientHeight + "px" }
                ];
+               const anim = fly.animate(kf, { duration: 150, easing: 'linear', fill: 'forwards' });
+               await anim.finished;
             }
-            
-            const animation = fly.animate(keyframes, { duration, easing: 'linear', fill: 'forwards' });
-            await animation.finished;
             
             currentIdx--;
          }
@@ -768,23 +774,33 @@
         
         const midSize = (sourceParent.clientWidth + targetEl.clientWidth) / 2;
 
-        const keyframes = [
+        const kf1 = [
           { left: sourceParent.style.left, top: sourceParent.style.top, width: sourceParent.clientWidth + "px", height: sourceParent.clientHeight + "px" },
+          { left: jxLocal.x + "px", top: jxLocal.y + "px", width: midSize + "px", height: midSize + "px" }
+        ];
+        const anim1 = fly.animate(kf1, { duration: 150, easing: 'linear', fill: 'forwards' });
+        await anim1.finished;
+        
+        const kf2 = [
           { left: jxLocal.x + "px", top: jxLocal.y + "px", width: midSize + "px", height: midSize + "px" },
           { left: targetEl.style.left, top: targetEl.style.top, width: targetEl.clientWidth + "px", height: targetEl.clientHeight + "px" }
         ];
-        
-        const animation = fly.animate(keyframes, { duration: 300, easing: 'linear', fill: 'forwards' });
-        await animation.finished;
+        const anim2 = fly.animate(kf2, { duration: 150, easing: 'linear', fill: 'forwards' });
+        await anim2.finished;
       } else {
-        const keyframes = [
+        const kf1 = [
           { left: sourceParent.style.left, top: sourceParent.style.top, width: sourceParent.clientWidth + "px", height: sourceParent.clientHeight + "px" },
+          { left: cx + "px", top: cy + "px", width: targetEl.clientWidth + "px", height: targetEl.clientHeight + "px" }
+        ];
+        const anim1 = fly.animate(kf1, { duration: 200, easing: 'linear', fill: 'forwards' });
+        await anim1.finished;
+        
+        const kf2 = [
           { left: cx + "px", top: cy + "px", width: targetEl.clientWidth + "px", height: targetEl.clientHeight + "px" },
           { left: targetEl.style.left, top: targetEl.style.top, width: targetEl.clientWidth + "px", height: targetEl.clientHeight + "px" }
         ];
-        
-        const animation = fly.animate(keyframes, { duration: 350, easing: 'linear', fill: 'forwards' });
-        await animation.finished;
+        const anim2 = fly.animate(kf2, { duration: 150, easing: 'linear', fill: 'forwards' });
+        await anim2.finished;
         fly.style.transform = "translate(-50%, -50%) scale(1.5)";
       }
       
