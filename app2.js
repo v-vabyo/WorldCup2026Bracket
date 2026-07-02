@@ -513,31 +513,6 @@
   // ================================================================
   // INTERACTIONS
   // ================================================================
-  function clearDownstreamPicks(sourceRing, matchId) {
-    let nextMatchId = null;
-    let nextStateObj = null;
-    
-    if (sourceRing === 0) {
-      nextMatchId = R16_BRACKET.find(m => m.feedFrom.includes(matchId))?.id;
-      nextStateObj = state.picks.r16;
-    } else if (sourceRing === 1) {
-      nextMatchId = QF_BRACKET.find(m => m.feedFrom.includes(matchId))?.id;
-      nextStateObj = state.picks.qf;
-    } else if (sourceRing === 2) {
-      nextMatchId = SF_BRACKET.find(m => m.feedFrom.includes(matchId))?.id;
-      nextStateObj = state.picks.sf;
-    } else if (sourceRing === 3) {
-      nextMatchId = F_BRACKET.find(m => m.feedFrom.includes(matchId))?.id;
-      nextStateObj = state.picks.f;
-    }
-    
-    if (nextMatchId && nextStateObj && nextStateObj[nextMatchId]) {
-      delete nextStateObj[nextMatchId];
-      if (state.simScores) delete state.simScores[nextMatchId];
-      clearDownstreamPicks(sourceRing + 1, nextMatchId);
-    }
-  }
-
   function advanceTeam(sourceNode) {
     if (sourceNode.ring === 5) return;
 
@@ -599,40 +574,6 @@
       targetRing = 5;
       targetMatchId = fMatch.id;
     }
-
-    // Always regenerate a realistic score when user manually picks a winner
-    // This ensures that manual overrides have valid scores displayed
-    let scoreW = Math.floor(Math.random() * 3) + 1; // 1, 2, 3
-    let scoreL = Math.floor(Math.random() * scoreW); // 0 to scoreW-1
-    let penW = null, penL = null;
-    if (Math.random() < 0.15) { // 15% chance of penalties
-       scoreW = Math.floor(Math.random() * 3); // 0, 1, 2
-       scoreL = scoreW; // Draw
-       penW = Math.floor(Math.random() * 2) + 4; // 4, 5
-       penL = penW - 1 - Math.floor(Math.random() * 2); // 2, 3, 4
-    }
-    
-    // In our bracket, t1 is always the left feed (feedFrom[0]) and t2 is the right feed (feedFrom[1])
-    // So we just assign the winning score to sourceNode.team and losing score to the other team
-    let isT1Winner = sourceNode.t1 === sourceNode.team;
-    if (sourceNode.ring === 0) {
-       const m = MATCHES_R32.find(x => x.id === sourceNode.matchId);
-       if (m) isT1Winner = m.team1 === sourceNode.team;
-    }
-    
-    state.simScores[matchToUpdate] = { 
-       t1Score: isT1Winner ? scoreW : scoreL, 
-       t2Score: isT1Winner ? scoreL : scoreW, 
-       pen1: isT1Winner ? penW : penL, 
-       pen2: isT1Winner ? penL : penW 
-    };
-
-    // Keep track of user picks
-    stateObj[matchToUpdate] = sourceNode.team;
-    
-    // Clear downstream picks if the pick changed
-    clearDownstreamPicks(sourceNode.ring, matchToUpdate);
-
     const isHardcodedWinner = sourceNode.ring === 0 && MATCHES_R32.find(m => m.id === matchToUpdate)?.winner === sourceNode.team;
     if (stateObj[matchToUpdate] === sourceNode.team || isHardcodedWinner) {
       const targetEl = arenaEl.querySelector(`[data-match="${targetMatchId}"][data-ring="${targetRing}"]`);
@@ -734,6 +675,7 @@
          
          fly.remove();
          delete stateObj[matchToUpdate];
+         if (state.simScores) delete state.simScores[matchToUpdate];
          clearDownstream(matchToUpdate, sourceNode.ring);
          buildBracket();
       };
@@ -758,6 +700,29 @@
       if (stateObj[matchToUpdate] && stateObj[matchToUpdate] !== sourceNode.team) {
          clearDownstream(matchToUpdate, sourceNode.ring);
       }
+      
+      // Always regenerate a realistic mock score when user manually picks a winner
+      let scoreW = Math.floor(Math.random() * 3) + 1; // 1, 2, 3
+      let scoreL = Math.floor(Math.random() * scoreW); // 0 to scoreW-1
+      let penW = null, penL = null;
+      if (Math.random() < 0.15) { // 15% chance of penalties
+         scoreW = Math.floor(Math.random() * 3); // 0, 1, 2
+         scoreL = scoreW; // Draw
+         penW = Math.floor(Math.random() * 2) + 4; // 4, 5
+         penL = penW - 1 - Math.floor(Math.random() * 2); // 2, 3, 4
+      }
+      let isT1Winner = sourceNode.t1 === sourceNode.team;
+      if (sourceNode.ring === 0) {
+         const m = MATCHES_R32.find(x => x.id === sourceNode.matchId);
+         if (m) isT1Winner = m.team1 === sourceNode.team;
+      }
+      state.simScores[matchToUpdate] = { 
+         t1Score: isT1Winner ? scoreW : scoreL, 
+         t2Score: isT1Winner ? scoreL : scoreW, 
+         pen1: isT1Winner ? penW : penL, 
+         pen2: isT1Winner ? penL : penW 
+      };
+
       stateObj[matchToUpdate] = sourceNode.team;
       buildBracket();
     };
