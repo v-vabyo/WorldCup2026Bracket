@@ -41,15 +41,15 @@ const MATCHES_R32 = [
   // Left Hemisphere
   {
     id: "R32-1", matchNum: 73, date: "2026-06-28", time: "15:00 ET", venue: "SoFi Stadium, Los Angeles",
-    team1: "ZAF", team2: "CAN", score1: 0, score2: 1, status: "finished", penaltyScore1: null, penaltyScore2: null, winner: "CAN", goals: []
+    team1: "ZAF", team2: "CAN", score1: null, score2: null, status: "upcoming", penaltyScore1: null, penaltyScore2: null, winner: null, goals: []
   },
   {
     id: "R32-2", matchNum: 74, date: "2026-06-28", time: "19:00 ET", venue: "NRG Stadium, Houston",
-    team1: "NLD", team2: "MAR", score1: 1, score2: 1, status: "finished", penaltyScore1: 2, penaltyScore2: 3, winner: "MAR", goals: []
+    team1: "NLD", team2: "MAR", score1: null, score2: null, status: "upcoming", penaltyScore1: null, penaltyScore2: null, winner: null, goals: []
   },
   {
     id: "R32-3", matchNum: 75, date: "2026-06-29", time: "13:00 ET", venue: "Gillette Stadium, Boston",
-    team1: "DEU", team2: "PRY", score1: 1, score2: 1, status: "finished", penaltyScore1: 3, penaltyScore2: 4, winner: "PRY", goals: []
+    team1: "DEU", team2: "PRY", score1: null, score2: null, status: "upcoming", penaltyScore1: null, penaltyScore2: null, winner: null, goals: []
   },
   {
     id: "R32-4", matchNum: 76, date: "2026-06-29", time: "17:00 ET", venue: "Estadio BBVA, Monterrey",
@@ -75,11 +75,11 @@ const MATCHES_R32 = [
   // Right Hemisphere
   {
     id: "R32-9", matchNum: 81, date: "2026-07-01", time: "16:00 ET", venue: "Lumen Field, Seattle",
-    team1: "BRA", team2: "JPN", score1: 2, score2: 1, status: "finished", penaltyScore1: null, penaltyScore2: null, winner: "BRA", goals: []
+    team1: "BRA", team2: "JPN", score1: null, score2: null, status: "upcoming", penaltyScore1: null, penaltyScore2: null, winner: null, goals: []
   },
   {
     id: "R32-10", matchNum: 82, date: "2026-07-01", time: "19:00 ET", venue: "Levi's Stadium, San Francisco Bay Area",
-    team1: "CIV", team2: "NOR", score1: 0, score2: 0, status: "live", penaltyScore1: null, penaltyScore2: null, winner: null, goals: []
+    team1: "CIV", team2: "NOR", score1: null, score2: null, status: "upcoming", penaltyScore1: null, penaltyScore2: null, winner: null, goals: []
   },
   {
     id: "R32-11", matchNum: 83, date: "2026-07-02", time: "13:00 ET", venue: "Hard Rock Stadium, Miami",
