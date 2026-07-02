@@ -724,7 +724,23 @@
       };
 
       stateObj[matchToUpdate] = sourceNode.team;
+      
+      // Also write simulation scores safely for manual selections
+      if (!state.simScores) state.simScores = {};
+      if (!state.simScores[matchToUpdate]) {
+         state.simScores[matchToUpdate] = {
+           scoreW: Math.floor(Math.random() * 3) + 1,
+           scoreL: Math.floor(Math.random() * 2),
+           penW: null, penL: null
+         };
+      }
+      
       buildBracket();
+      
+      if (targetRing === 5) {
+         showToast("🏆 " + sourceNode.team + " WINS THE WORLD CUP!");
+         spawnConfetti(window.innerWidth / 2, window.innerHeight / 2);
+      }
     };
 
     // If no animation source, just update immediately
@@ -733,25 +749,29 @@
       return;
     }
 
-    // Animate
-    requestAnimationFrame(() => {
+    // Animate Forward
+    const animateForward = async () => {
+      const flyTo = (x, y, w, h, duration) => {
+         return new Promise(resolve => {
+            fly.style.transition = `all ${duration}ms linear`;
+            fly.style.left = x + "px";
+            fly.style.top = y + "px";
+            fly.style.width = w + "px";
+            fly.style.height = h + "px";
+            setTimeout(resolve, duration + 20);
+         });
+      };
+
       const fly = document.createElement("img");
       fly.src = flagSvg(sourceNode.team);
       fly.className = "flag-fly";
+      document.body.appendChild(fly);
+      
       fly.style.left = srcRect.left + "px";
       fly.style.top = srcRect.top + "px";
       fly.style.width = srcRect.width + "px";
       fly.style.height = srcRect.height + "px";
-      fly.style.transition = "all 0.3s linear";
-      document.body.appendChild(fly);
-
-      // Force reflow
-      fly.offsetHeight;
-
-      const finishAnimation = () => {
-        fly.remove();
-        applyStateAndRebuild();
-      };
+      fly.offsetHeight; // Force reflow
 
       if (targetRing < 5) {
         const targetAngle = parseFloat(targetEl.dataset.angle);
@@ -769,80 +789,23 @@
         const midWidth = (srcRect.width + targetRect.width) / 2;
         const midHeight = (srcRect.height + targetRect.height) / 2;
 
-        // Step 1: Fly to junction
-        fly.style.left = (jxCenterX - midWidth / 2) + "px";
-        fly.style.top = (jxCenterY - midHeight / 2) + "px";
-        fly.style.width = midWidth + "px";
-        fly.style.height = midHeight + "px";
-
-        let step1Done = false;
-        const onStep1 = (e) => {
-          if (e && e.propertyName !== "left") return;
-          if (step1Done) return;
-          step1Done = true;
-          fly.removeEventListener("transitionend", onStep1);
-          
-          // Step 2: Fly to target
-          fly.style.transition = "all 0.3s ease-out";
-          fly.style.left = targetRect.left + "px";
-          fly.style.top = targetRect.top + "px";
-          fly.style.width = targetRect.width + "px";
-          fly.style.height = targetRect.height + "px";
-
-          let step2Done = false;
-          const onStep2 = (e2) => {
-            if (e2 && e2.propertyName !== "left") return;
-            if (step2Done) return;
-            step2Done = true;
-            fly.removeEventListener("transitionend", onStep2);
-            finishAnimation();
-          };
-          fly.addEventListener("transitionend", onStep2);
-          // Fallback just in case transitionend fails
-          setTimeout(onStep2, 350);
-        };
-        fly.addEventListener("transitionend", onStep1);
-        setTimeout(onStep1, 350);
+        await flyTo(jxCenterX - midWidth / 2, jxCenterY - midHeight / 2, midWidth, midHeight, 150);
+        await flyTo(targetRect.left, targetRect.top, targetRect.width, targetRect.height, 150);
       } else {
-        // Direct flight for Final
-        // Step 1: Fly to center (trophy)
         const arenaRect = arenaEl.getBoundingClientRect();
         const cx = arenaRect.left + arenaEl.clientWidth / 2;
         const cy = arenaRect.top + arenaEl.clientHeight / 2;
         
-        fly.style.transition = "all 0.4s ease-in-out";
-        fly.style.left = (cx - targetRect.width / 2) + "px";
-        fly.style.top = (cy - targetRect.height / 2) + "px";
-        fly.style.width = targetRect.width + "px";
-        fly.style.height = targetRect.height + "px";
-
-        let step1Done = false;
-        const onStep1 = (e) => {
-          if (e && e.propertyName !== "left") return;
-          if (step1Done) return;
-          step1Done = true;
-          fly.removeEventListener("transitionend", onStep1);
-          
-          // Step 2: Fly to targetRect (below trophy)
-          fly.style.transition = "all 0.3s ease-out";
-          fly.style.left = targetRect.left + "px";
-          fly.style.top = targetRect.top + "px";
-          
-          let done = false;
-          const onDone = (e2) => {
-            if (e2 && e2.propertyName !== "left") return;
-            if (done) return;
-            done = true;
-            fly.removeEventListener("transitionend", onDone);
-            finishAnimation();
-          };
-          fly.addEventListener("transitionend", onDone);
-          setTimeout(onDone, 350);
-        };
-        fly.addEventListener("transitionend", onStep1);
-        setTimeout(onStep1, 450);
+        await flyTo(cx - targetRect.width / 2, cy - targetRect.height / 2, targetRect.width, targetRect.height, 200);
+        await flyTo(targetRect.left, targetRect.top, targetRect.width, targetRect.height, 150);
+        fly.style.transform = "translate(-50%, -50%) scale(1.5)";
       }
-    });
+      
+      fly.remove();
+      applyStateAndRebuild();
+    };
+
+    requestAnimationFrame(animateForward);
   }
 
   function clearDownstream(matchId, startRound) {
