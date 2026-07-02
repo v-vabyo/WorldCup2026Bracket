@@ -654,19 +654,16 @@ body {
 /* Center Trophy animation */
 .arena-animating .trophy-center {
   opacity: 0;
-  transform: translate(-50%, -50%) scale(5);
-  filter: blur(10px);
+  transform: translate(-50%, -50%) scale(0.5);
 }
 
 .arena-animating .trophy-center.animate-in {
-  animation: trophyFlyIn 1.5s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards;
+  animation: trophyPopIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-@keyframes trophyFlyIn {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(5); filter: blur(10px); }
-  20% { opacity: 1; filter: blur(0px); }
-  70% { transform: translate(-50%, -50%) scale(0.9); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0px); }
+@keyframes trophyPopIn {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 /* SVG Line animations */
