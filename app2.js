@@ -513,6 +513,31 @@
   // ================================================================
   // INTERACTIONS
   // ================================================================
+  function clearDownstreamPicks(sourceRing, matchId) {
+    let nextMatchId = null;
+    let nextStateObj = null;
+    
+    if (sourceRing === 0) {
+      nextMatchId = R16_BRACKET.find(m => m.feedFrom.includes(matchId))?.id;
+      nextStateObj = state.picks.r16;
+    } else if (sourceRing === 1) {
+      nextMatchId = QF_BRACKET.find(m => m.feedFrom.includes(matchId))?.id;
+      nextStateObj = state.picks.qf;
+    } else if (sourceRing === 2) {
+      nextMatchId = SF_BRACKET.find(m => m.feedFrom.includes(matchId))?.id;
+      nextStateObj = state.picks.sf;
+    } else if (sourceRing === 3) {
+      nextMatchId = F_BRACKET.find(m => m.feedFrom.includes(matchId))?.id;
+      nextStateObj = state.picks.f;
+    }
+    
+    if (nextMatchId && nextStateObj && nextStateObj[nextMatchId]) {
+      delete nextStateObj[nextMatchId];
+      if (state.simScores) delete state.simScores[nextMatchId];
+      clearDownstreamPicks(sourceRing + 1, nextMatchId);
+    }
+  }
+
   function advanceTeam(sourceNode) {
     if (sourceNode.ring === 5) return;
 
@@ -606,7 +631,7 @@
     stateObj[matchToUpdate] = sourceNode.team;
     
     // Clear downstream picks if the pick changed
-    clearDownstreamPicks(targetRing, targetMatchId);
+    clearDownstreamPicks(sourceNode.ring, matchToUpdate);
 
     const isHardcodedWinner = sourceNode.ring === 0 && MATCHES_R32.find(m => m.id === matchToUpdate)?.winner === sourceNode.team;
     if (stateObj[matchToUpdate] === sourceNode.team || isHardcodedWinner) {
