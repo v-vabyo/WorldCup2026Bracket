@@ -191,6 +191,8 @@ body {
   border-radius: 50%;
   z-index: 10;
   background: var(--bg-void);
+  --final-opacity: 1;
+  opacity: var(--final-opacity);
   box-shadow: 0 0 0 2px var(--bg-void);
   transition: all var(--ease-spring) 0.3s;
   cursor: pointer;
@@ -212,7 +214,7 @@ body {
 }
 
 .team-node--loser {
-  opacity: 0.5;
+  --final-opacity: 0.5;
 }
 
 .node-flag {
@@ -647,8 +649,8 @@ body {
 
 @keyframes nodePopIn {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
-  60% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  60% { opacity: var(--final-opacity); transform: translate(-50%, -50%) scale(1.1); }
+  100% { opacity: var(--final-opacity); transform: translate(-50%, -50%) scale(1); }
 }
 
 /* Center Trophy animation */
