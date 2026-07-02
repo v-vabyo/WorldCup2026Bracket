@@ -636,6 +636,11 @@ body {
   transform: translate(-50%, -50%) scale(0);
 }
 
+.arena-animating .team-node--empty {
+  opacity: 0 !important;
+  animation: none !important;
+}
+
 .arena-animating .team-node.animate-in {
   animation: nodePopIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
@@ -679,18 +684,4 @@ body {
   }
 }
 
-/* Branching dots animation */
-.arena-animating .connector-dot {
-  opacity: 0;
-  transform: scale(0);
-  transform-origin: center;
-}
 
-.arena-animating .connector-dot.animate-in {
-  animation: dotPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-@keyframes dotPop {
-  0% { opacity: 0; transform: scale(0); }
-  100% { opacity: 1; transform: scale(1); }
-}

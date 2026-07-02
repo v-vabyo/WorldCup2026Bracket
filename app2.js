@@ -420,14 +420,6 @@
          p.style.animationDelay = delay + 's';
          p.classList.add('animate-in');
        });
-       
-       const dots = arenaEl.querySelectorAll('.connector-dot');
-       dots.forEach(d => {
-         const r1 = parseInt(d.getAttribute('data-r1') || "0");
-         const delay = ((5 - r1) * 0.8) + 0.6;
-         d.style.animationDelay = delay + 's';
-         d.classList.add('animate-in');
-       });
 
        const nodes = arenaEl.querySelectorAll('.team-node');
        nodes.forEach(n => {
