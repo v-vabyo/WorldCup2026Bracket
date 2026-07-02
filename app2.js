@@ -986,7 +986,7 @@
                 m.penaltyScore1 = p1;
                 m.penaltyScore2 = p2;
                 m.winner = winner;
-                m.lastUpdated = Date.now();
+                m.lastUpdated = apiMatch.lastUpdated ? new Date(apiMatch.lastUpdated).getTime() : Date.now();
                 
                 if (newStatus === "finished" && winner) {
                    matchData.roundObj[m.id] = winner;
