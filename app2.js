@@ -1052,7 +1052,7 @@
     
     // Fetch immediately, then every 10 seconds
     fetchAPI();
-    setInterval(fetchAPI, 10000);
+    setInterval(fetchAPI, 60000);
     
     document.addEventListener("visibilitychange", () => {
        if (document.visibilityState === "visible") fetchAPI();
